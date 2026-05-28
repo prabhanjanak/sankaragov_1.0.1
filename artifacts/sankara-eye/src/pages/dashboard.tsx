@@ -31,6 +31,7 @@ import {
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemo } from "react";
+import { Link } from "wouter";
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const SANKARA_STATES = [
@@ -489,11 +490,11 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <a href="/eye-calls" className="shrink-0">
+            <Link href="/eye-calls" className="shrink-0">
               <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg">
                 Coordinate Now
               </Button>
-            </a>
+            </Link>
           </CardContent>
         </Card>
       )}
@@ -875,7 +876,7 @@ export default function Dashboard() {
           </div>
         </button>
 
-        <a href="/eye-calls" className="group flex items-center gap-4 bg-white border border-gray-100 text-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]">
+        <Link href="/eye-calls" className="group flex items-center gap-4 bg-white border border-gray-100 text-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]">
           <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 group-hover:rotate-6 transition-transform">
             <ClipboardList className="h-5 w-5" />
           </div>
@@ -883,10 +884,10 @@ export default function Dashboard() {
             <p className="font-extrabold text-sm">All Eye Calls</p>
             <p className="text-[11px] text-gray-400">Manage & update statuses</p>
           </div>
-        </a>
+        </Link>
 
         {isAdmin && (
-          <a href="/units" className="group flex items-center gap-4 bg-white border border-gray-100 text-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]">
+          <Link href="/units" className="group flex items-center gap-4 bg-white border border-gray-100 text-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]">
             <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 text-purple-600 group-hover:rotate-6 transition-transform">
               <Building2 className="h-5 w-5" />
             </div>
@@ -894,7 +895,7 @@ export default function Dashboard() {
               <p className="font-extrabold text-sm">Manage Units</p>
               <p className="text-[11px] text-gray-400">Add or edit hospital units</p>
             </div>
-          </a>
+          </Link>
         )}
       </div>
 
