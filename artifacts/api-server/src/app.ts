@@ -7,6 +7,15 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// Allowed origins: Vercel production, preview, and local dev
+const ALLOWED_ORIGINS = [
+  "https://sankaragov-1-0-1.vercel.app",
+  "https://sankara-eye-api.onrender.com",
+  /^https:\/\/sankaragov.*\.vercel\.app$/,
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
+];
+
 app.use(
   pinoHttp({
     logger,
@@ -28,7 +37,18 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(cors({ credentials: true, origin: true }));
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow non-browser (curl, Render health check)
+      const isAllowed = ALLOWED_ORIGINS.some((allowed) =>
+        typeof allowed === "string" ? allowed === origin : allowed.test(origin),
+      );
+      callback(null, isAllowed ? origin : false);
+    },
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
