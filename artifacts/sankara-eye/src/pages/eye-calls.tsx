@@ -399,7 +399,7 @@ export default function EyeCalls() {
       {/* Interactive Floating Details & Official A4 Printable Case Sheet Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         {selectedCall && (
-          <DialogContent className="max-w-[850px] max-h-[92vh] overflow-y-auto rounded-3xl bg-white border border-slate-150 p-0 shadow-2xl relative overflow-x-hidden">
+          <DialogContent className="max-w-[850px] max-h-[92vh] overflow-y-auto rounded-3xl bg-white border border-slate-150 p-0 shadow-2xl overflow-x-hidden">
             
             {/* Modal Glass Banner */}
             <div className="p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-orange-950 text-white flex justify-between items-start gap-4 sticky top-0 z-20 shadow-md">
