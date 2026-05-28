@@ -10,7 +10,7 @@ const app: Express = express();
 // Allowed origins: Vercel production, preview, and local dev
 const ALLOWED_ORIGINS = [
   "https://sankaragov-1-0-1.vercel.app",
-  "https://sankara-eye-api.onrender.com",
+  "https://sefi-eyedonation.onrender.com",
   /^https:\/\/sankaragov.*\.vercel\.app$/,
   /^http:\/\/localhost:\d+$/,
   /^http:\/\/127\.0\.0\.1:\d+$/,
