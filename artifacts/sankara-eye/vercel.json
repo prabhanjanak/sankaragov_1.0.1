@@ -1,0 +1,13 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://sefi-eyedonation.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!assets/|logo.png|favicon.svg|favicon.ico|robots.txt|opengraph.jpg).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
