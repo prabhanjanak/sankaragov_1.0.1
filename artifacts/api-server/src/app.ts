@@ -7,11 +7,10 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
-// Allowed origins: Vercel production, preview, and local dev
+// Allowed origins: any Vercel deploy, Render service, and local dev
 const ALLOWED_ORIGINS = [
-  "https://sankaragov-1-0-1.vercel.app",
   "https://sefi-eyedonation.onrender.com",
-  /^https:\/\/sankaragov.*\.vercel\.app$/,
+  /^https:\/\/.*\.vercel\.app$/,
   /^http:\/\/localhost:\d+$/,
   /^http:\/\/127\.0\.0\.1:\d+$/,
 ];
