@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useListEyeCalls } from "@workspace/api-client-react";
-import { Bell, Clock, AlertCircle } from "lucide-react";
+import { Bell, Clock, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 
@@ -32,28 +32,34 @@ export default function Notifications() {
 
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500">Loading alerts...</div>
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#ff7a18] mx-auto" />
+            <span className="text-xs text-gray-500 font-bold mt-2 block">Scanning radar frequency...</span>
+          </div>
         ) : newCalls && newCalls.length > 0 ? (
           newCalls.map((call) => (
             <Link key={call.id} href="/eye-calls">
-              <Card className="border-red-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden group">
-                <div className="bg-red-50 px-4 py-3 border-b border-red-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-red-700 font-bold text-sm">
-                    <AlertCircle size={16} className="animate-pulse" /> Emergency Call: {call.callId}
+              <Card className="border border-red-200/80 shadow-md hover:shadow-lg hover:scale-[1.015] hover:border-red-500/35 transition-all duration-300 bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden group relative select-none cursor-pointer">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-rose-400 animate-pulse" />
+                <div className="bg-red-50/40 px-4 py-3 border-b border-red-100/60 flex items-center justify-between pt-4">
+                  <div className="flex items-center gap-2 text-red-700 font-black text-xs uppercase tracking-wider font-['Outfit']">
+                    <AlertCircle size={16} className="animate-pulse text-red-600" /> Critical Emergency Call: {call.callId}
                   </div>
-                  <div className="text-xs font-semibold text-red-500 flex items-center gap-1">
+                  <div className="text-[11px] font-bold text-red-500 flex items-center gap-1">
                     <Clock size={12} /> {formatDistanceToNow(new Date(call.createdAt!), { addSuffix: true })}
                   </div>
                 </div>
-                <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
+                <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h3 className="font-extrabold text-gray-900">{call.referrerName}</h3>
-                    <p className="text-sm text-gray-600">{call.referrerMobile}</p>
-                    <p className="text-xs text-gray-500 mt-1">Location: {call.district}, {call.state}</p>
+                    <h3 className="font-extrabold text-gray-900 text-sm">{call.referrerName}</h3>
+                    <p className="text-xs text-gray-500 font-medium font-mono mt-0.5">{call.referrerMobile}</p>
+                    <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
+                      <MapPin size={12} className="text-[#ff7a18]" /> Location: {call.district}, {call.state}
+                    </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className="inline-flex bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider group-hover:bg-red-700 transition-colors">
-                      Dispatch Action Required &rarr;
+                    <span className="inline-flex bg-gradient-to-r from-red-600 to-rose-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider group-hover:scale-105 transition-all shadow-md shadow-red-500/10 cursor-pointer">
+                      Dispatch Coordinator &rarr;
                     </span>
                   </div>
                 </CardContent>
@@ -61,12 +67,12 @@ export default function Notifications() {
             </Link>
           ))
         ) : (
-          <div className="bg-gray-50 border border-gray-200 border-dashed rounded-3xl p-12 text-center flex flex-col items-center">
-            <div className="bg-gray-100 p-4 rounded-full mb-4">
-              <Bell className="h-8 w-8 text-gray-400" />
+          <div className="bg-white/70 backdrop-blur-md border border-gray-250/70 border-dashed rounded-3xl p-12 text-center flex flex-col items-center justify-center select-none shadow-sm">
+            <div className="bg-[#ff7a18]/5 p-4.5 rounded-2xl mb-4 border border-[#ff7a18]/10 text-[#ff7a18] shadow-inner">
+              <Bell className="h-8 w-8 animate-bounce" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">No Active Alerts</h3>
-            <p className="text-gray-500 mt-1 max-w-sm">There are currently no new emergency calls pending dispatch. Check back later.</p>
+            <h3 className="text-base font-extrabold text-gray-900 font-['Outfit']">Radar Frequency Clear</h3>
+            <p className="text-xs text-gray-400 mt-1.5 max-w-xs font-semibold leading-relaxed">No new active emergency dispatches detected. The hospital network is running completely smoothly.</p>
           </div>
         )}
       </div>

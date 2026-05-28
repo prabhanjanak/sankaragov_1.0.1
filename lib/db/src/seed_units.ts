@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { unitsTable } from "./schema/units";
+import { unitsTable, InsertUnit } from "./schema/units";
 
 const units = [
   {
@@ -112,7 +112,12 @@ const units = [
 async function seed() {
   console.log("Seeding units...");
   for (const unit of units) {
-    await db.insert(unitsTable).values(unit).onConflictDoNothing();
+    const seedUnit: InsertUnit = {
+      ...unit,
+      coordinatorName: "Eye Bank Coordinator",
+      coordinatorWhatsapp: "+91 9000019190"
+    };
+    await db.insert(unitsTable).values(seedUnit).onConflictDoNothing();
   }
   console.log("Seeding complete!");
   process.exit(0);

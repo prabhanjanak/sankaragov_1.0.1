@@ -26,12 +26,31 @@ import {
   ClipboardList, HeartHandshake, Search, X
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend
+  BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, Label as RechartsLabel
 } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemo } from "react";
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
+const SANKARA_STATES = [
+  "Uttar Pradesh",
+  "Tamil Nadu",
+  "Andhra Pradesh",
+  "Gujarat",
+  "Karnataka",
+  "Telangana",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Punjab",
+  "Rajasthan"
+];
+
+const isOutOfRegionState = (stateName: string) => {
+  if (!stateName) return false;
+  return !SANKARA_STATES.some(s => s.toLowerCase() === stateName.toLowerCase().trim());
+};
+
 const STATUS_COLORS: Record<string, string> = {
   new: "#3b82f6",
   contacted: "#f59e0b",
@@ -293,7 +312,13 @@ export default function Dashboard() {
     { unitId: selectedUnit === "all" ? undefined : selectedUnit, limit: 100 }
   );
 
-  const stats = selectedUnit === "all" ? globalStats : {
+  // Find if there are any new/contacted calls that are out of region
+  const outOfRegionCalls = useMemo(() => {
+    const calls = unitCallsData?.data || [];
+    return calls.filter(c => (c.status === "new" || c.status === "contacted") && isOutOfRegionState(c.state));
+  }, [unitCallsData]);
+
+  const stats = (selectedUnit === "all" ? globalStats : {
     totalCalls: unitCallsData?.data?.length || 0,
     newCalls: unitCallsData?.data?.filter(c => c.status === "new").length || 0,
     contactedCalls: unitCallsData?.data?.filter(c => c.status === "contacted").length || 0,
@@ -302,6 +327,15 @@ export default function Dashboard() {
     cancelledCalls: unitCallsData?.data?.filter(c => c.status === "cancelled").length || 0,
     totalUnits: 1,
     activeUnits: 1
+  }) || {
+    totalCalls: 0,
+    newCalls: 0,
+    contactedCalls: 0,
+    teamSentCalls: 0,
+    completedCalls: 0,
+    cancelledCalls: 0,
+    totalUnits: 0,
+    activeUnits: 0
   };
 
   const statusData = selectedUnit === "all" ? globalStatusData : [
@@ -335,6 +369,69 @@ export default function Dashboard() {
     value: d.count,
     color: STATUS_COLORS[d.status] || "#94a3b8",
   }));
+
+  // Dynamic daily trends grouped by day
+  const dailyData = useMemo(() => {
+    const calls = unitCallsData?.data || [];
+    
+    // Group by formatted date: "MMM d"
+    const groups: Record<string, number> = {};
+    // Populate the last 7 days including today
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = format(d, "MMM d");
+      groups[key] = 0;
+    }
+
+    calls.forEach(c => {
+      try {
+        const key = format(new Date(c.createdAt), "MMM d");
+        if (groups[key] !== undefined) {
+          groups[key]++;
+        } else {
+          groups[key] = (groups[key] || 0) + 1;
+        }
+      } catch (e) {}
+    });
+
+    return Object.entries(groups).map(([date, count]) => ({
+      date,
+      "Eye Calls": count
+    })).slice(-10); // Keep last 10 dates for clean chart layout
+  }, [unitCallsData]);
+
+  // Dynamic monthly trends grouped by month
+  const monthlyData = useMemo(() => {
+    const calls = unitCallsData?.data || [];
+    
+    const groups: Record<string, number> = {
+      "Jan": 0, "Feb": 0, "Mar": 0, "Apr": 0, "May": 0, "Jun": 0,
+      "Jul": 0, "Aug": 0, "Sep": 0, "Oct": 0, "Nov": 0, "Dec": 0
+    };
+
+    const currentYear = new Date().getFullYear();
+
+    calls.forEach(c => {
+      try {
+        const date = new Date(c.createdAt);
+        if (date.getFullYear() === currentYear) {
+          const key = format(date, "MMM");
+          if (groups[key] !== undefined) {
+            groups[key]++;
+          }
+        }
+      } catch (e) {}
+    });
+
+    const currentMonthIdx = new Date().getMonth();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    return months.slice(0, currentMonthIdx + 1).map(month => ({
+      month,
+      "Eye Calls": groups[month] || 0
+    }));
+  }, [unitCallsData]);
 
   return (
     <div className="space-y-6">
@@ -370,6 +467,36 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
+
+      {/* ── High-Priority Out-of-Region Coordination Center ── */}
+      {!statsLoading && outOfRegionCalls.length > 0 && (
+        <Card className="border border-red-200 bg-red-50/50 shadow-md rounded-3xl overflow-hidden relative">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
+          <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 shrink-0">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-red-900 font-sans uppercase tracking-wide flex items-center gap-1.5">
+                  ⚠️ {outOfRegionCalls.length} Out-of-Region Case{outOfRegionCalls.length > 1 ? "s" : ""} Pending Routing Action
+                </h4>
+                <p className="text-xs text-red-700 font-bold mt-0.5 leading-relaxed">
+                  We have received dispatches from states where Sankara Eye Hospital does not operate.
+                </p>
+                <p className="text-[10px] text-red-600 font-extrabold mt-1 uppercase tracking-wider">
+                  Directive: Please contact a local partner hospital or regional eye bank to transfer donor details within the critical 6-hour window.
+                </p>
+              </div>
+            </div>
+            <a href="/eye-calls" className="shrink-0">
+              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg">
+                Coordinate Now
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Stat Cards ── */}
       {statsLoading ? (
@@ -411,35 +538,120 @@ export default function Dashboard() {
 
       {/* ── Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border border-gray-100 shadow-sm">
+        {/* Hollow Donut Chart for Status Distribution */}
+        <Card className="glass-panel border-0 neo-shadow hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] rounded-3xl overflow-hidden relative group transition-all duration-300">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 opacity-80" />
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <BarChart2 className="h-4 w-4 text-orange-500" /> Status Distribution
+            <CardTitle className="text-sm font-extrabold text-gray-800 uppercase tracking-wider flex items-center gap-2 font-['Outfit']">
+              <BarChart2 className="h-4 w-4 text-orange-500 animate-pulse" /> Status Distribution
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center">
+          <CardContent className="h-72 flex items-center justify-center relative select-none">
             {statusLoading ? <Skeleton className="h-full w-full rounded-xl" /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="45%"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={4}
+                    cy="50%"
+                    innerRadius={62}
+                    outerRadius={82}
+                    paddingAngle={3}
                     dataKey="value"
                     nameKey="name"
                   >
                     {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
+                    <RechartsLabel
+                      position="center"
+                      content={(props: any) => {
+                        const { viewBox } = props;
+                        if (!viewBox) return null;
+                        const { cx, cy } = viewBox;
+                        return (
+                          <g>
+                            {/* Inner background glow circle */}
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={52}
+                              fill="#ffffff"
+                              className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
+                              stroke="#f1f5f9"
+                              strokeWidth={1}
+                            />
+                            {/* Inner highlight circle */}
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={46}
+                              fill="none"
+                              stroke="#f8fafc"
+                              strokeWidth={1.5}
+                            />
+                            {/* Count */}
+                            <text
+                              x={cx}
+                              y={cy - 4}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{
+                                fontSize: "28px",
+                                fontWeight: 900,
+                                fill: "#0f172a",
+                                fontFamily: "Outfit, sans-serif"
+                              }}
+                            >
+                              {stats.totalCalls}
+                            </text>
+                            {/* Label */}
+                            <text
+                              x={cx}
+                              y={cy + 16}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{
+                                fontSize: "9px",
+                                fontWeight: 800,
+                                fill: "#64748b",
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                fontFamily: "Outfit, sans-serif"
+                              }}
+                            >
+                              Total Cases
+                            </text>
+                          </g>
+                        );
+                      }}
+                    />
                   </Pie>
-                  <RechartsTooltip formatter={(v: any, n: any) => [v, n]} />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const entry = payload[0];
+                        return (
+                          <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white p-3 rounded-xl shadow-xl flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.payload.color || entry.color }} />
+                            <div>
+                              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider font-sans">{entry.name}</p>
+                              <p className="text-sm font-black text-white mt-0.5 font-['Outfit']">
+                                {entry.value} Cases
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend
                     iconType="circle"
                     iconSize={8}
-                    formatter={(v) => <span className="text-[11px] text-gray-600 font-semibold">{v}</span>}
+                    verticalAlign="bottom"
+                    height={40}
+                    formatter={(v) => <span className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">{v}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -447,30 +659,113 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-orange-500" /> Calls per Unit
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
-            {unitLoading ? <Skeleton className="h-full w-full rounded-xl" /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={unitData || []} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis
-                    dataKey="unitName"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: "#6b7280" }}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#6b7280" }} />
-                  <RechartsTooltip cursor={{ fill: "#fef3c7" }} />
-                  <Bar dataKey="count" fill="#ff7a18" radius={[6, 6, 0, 0]} label={{ position: "top", fontSize: 10, fill: "#374151" }} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
+        {/* Dynamic Daily & Monthly Trend Panel with Orange Gradients */}
+        <Card className="glass-panel border-0 neo-shadow hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] rounded-3xl overflow-hidden relative group transition-all duration-300">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff7a18] via-[#ff9f43] to-[#ffb347] opacity-80" />
+          <Tabs defaultValue="daily" className="w-full h-full flex flex-col">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between gap-4 space-y-0">
+              <CardTitle className="text-sm font-extrabold text-gray-800 uppercase tracking-wider flex items-center gap-2 font-['Outfit']">
+                <TrendingUp className="h-4 w-4 text-orange-500 animate-pulse" /> Donation Trends
+              </CardTitle>
+              <TabsList className="bg-gray-100/85 rounded-xl p-0.5 h-9 shrink-0 border border-gray-200/40">
+                <TabsTrigger value="daily" className="text-xs font-bold rounded-lg px-3 py-1 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm cursor-pointer">Daily Basis</TabsTrigger>
+                <TabsTrigger value="monthly" className="text-xs font-bold rounded-lg px-3 py-1 data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm cursor-pointer">Monthly Basis</TabsTrigger>
+              </TabsList>
+            </CardHeader>
+            <CardContent className="h-72 flex-1 pb-4">
+              {statsLoading ? <Skeleton className="h-full w-full rounded-xl" /> : (
+                <>
+                  <TabsContent value="daily" className="h-full mt-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailyData} margin={{ top: 15, right: 15, left: -5, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="orangeAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#ff7a18" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="#ff7a18" stopOpacity={0.0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                        <XAxis
+                          dataKey="date"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 10, fill: "#6b7280", fontWeight: 'bold' }}
+                        />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#6b7280", fontWeight: 'bold' }} />
+                        <RechartsTooltip
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white p-3 rounded-xl shadow-xl">
+                                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider font-sans">{label}</p>
+                                  <p className="text-sm font-black text-orange-400 mt-1 font-['Outfit']">
+                                    {payload[0].value} Eye Calls
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="Eye Calls"
+                          stroke="#ff7a18"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#orangeAreaGrad)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </TabsContent>
+
+                  <TabsContent value="monthly" className="h-full mt-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={monthlyData} margin={{ top: 15, right: 15, left: -5, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="orangeBarGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#ff7a18"/>
+                            <stop offset="100%" stopColor="#ff9f43"/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                        <XAxis
+                          dataKey="month"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 10, fill: "#6b7280", fontWeight: 'bold' }}
+                        />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#6b7280", fontWeight: 'bold' }} />
+                        <RechartsTooltip
+                          cursor={{ fill: "#fffbeb" }}
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white p-3 rounded-xl shadow-xl">
+                                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider font-sans">{label}</p>
+                                  <p className="text-sm font-black text-orange-400 mt-1 font-['Outfit']">
+                                    {payload[0].value} Eye Calls
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar
+                          dataKey="Eye Calls"
+                          fill="url(#orangeBarGrad)"
+                          radius={[6, 6, 0, 0]}
+                          barSize={32}
+                          label={{ position: "top", fontSize: 10, fill: "#ff7a18", fontWeight: 'bold' }}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </TabsContent>
+                </>
+              )}
+            </CardContent>
+          </Tabs>
         </Card>
       </div>
 
@@ -533,7 +828,14 @@ export default function Dashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm font-medium text-gray-700">{call.district}</div>
-                          <div className="text-[11px] text-gray-400">{call.state}</div>
+                          <div className="text-[11px] text-gray-400 flex items-center gap-1.5">
+                            <span>{call.state}</span>
+                            {isOutOfRegionState(call.state) && (
+                              <span className="bg-red-50 border border-red-200 text-[8px] font-black text-red-600 px-1.5 py-0.2 rounded uppercase tracking-wider animate-pulse shrink-0">
+                                ⚠️ Out of Region
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm font-medium text-gray-700">{call.referrerName}</div>

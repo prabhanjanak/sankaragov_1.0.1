@@ -229,53 +229,54 @@ export default function Units() {
           </Card>
         ) : (
           units.map((unit) => (
-            <Card key={unit.id} className="shadow-md border border-gray-150 rounded-2xl hover:shadow-lg transition-all bg-white flex flex-col overflow-hidden">
-              <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4 bg-gradient-to-b from-gray-50/50 to-white pt-5">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg font-bold leading-tight text-gray-900">{unit.name}</CardTitle>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <Card key={unit.id} className="shadow-sm border border-gray-200/80 rounded-2xl hover:shadow-md hover:scale-[1.015] hover:border-orange-500/25 transition-all duration-300 bg-white/70 backdrop-blur-md flex flex-col overflow-hidden group relative select-none">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-[#ff7a18] opacity-80" />
+              <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4 bg-gradient-to-b from-gray-50/50 to-white/10 pt-5">
+                <div className="space-y-1 flex-1">
+                  <CardTitle className="text-base font-extrabold leading-tight text-gray-900 font-['Outfit'] group-hover:text-[#ff7a18] transition-colors">{unit.name}</CardTitle>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 pt-0.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                    <span>{unit.district}, {unit.state}</span>
+                    <span className="inline-flex items-center bg-slate-50 border border-gray-200/80 px-2 py-0.5 rounded-full text-[10px] font-bold text-gray-600 uppercase tracking-wide">{unit.district}, {unit.state}</span>
                   </div>
                 </div>
                 <Badge
-                  className={`border-0 select-none ${
+                  className={`border-0 select-none font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded-full ${
                     unit.isActive
-                      ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-100"
+                      ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50 shadow-sm shadow-emerald-500/5"
+                      : "bg-gray-150/70 text-gray-500 hover:bg-gray-150/70"
                   }`}
                 >
-                  {unit.isActive ? "Active" : "Inactive"}
+                  {unit.isActive ? "Active Hub" : "Suspended"}
                 </Badge>
               </CardHeader>
               <CardContent className="p-5 pt-0 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2.5 bg-gray-50 p-4 rounded-xl border border-gray-100/80">
-                  <div className="flex items-center gap-3 text-sm">
+                <div className="space-y-3 bg-white/60 p-4 rounded-2xl border border-gray-200/50 shadow-sm">
+                  <div className="flex items-center gap-3 text-xs">
                     <div className="bg-white p-2 rounded-lg text-[#ff7a18] shadow-sm border border-orange-100/50">
                       <Building className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-[10px] uppercase font-semibold tracking-wider">Coordinator</div>
-                      <div className="font-semibold text-gray-800">{unit.coordinatorName}</div>
+                      <div className="text-gray-400 text-[9px] uppercase font-bold tracking-wider">Coordinator</div>
+                      <div className="font-extrabold text-gray-800">{unit.coordinatorName}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-3 text-xs">
                     <div className="bg-white p-2 rounded-lg text-[#ff7a18] shadow-sm border border-orange-100/50">
                       <Phone className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-[10px] uppercase font-semibold tracking-wider">WhatsApp Contact</div>
-                      <div className="font-semibold text-gray-800">{unit.coordinatorWhatsapp}</div>
+                      <div className="text-gray-400 text-[9px] uppercase font-bold tracking-wider">WhatsApp Contact</div>
+                      <div className="font-extrabold text-gray-800">{unit.coordinatorWhatsapp}</div>
                     </div>
                   </div>
                 </div>
                 {isAdmin && (
-                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                  <div className="flex gap-2 pt-2 border-t border-gray-150/60">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenEdit(unit)}
-                      className="w-full text-xs font-semibold border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 rounded-lg"
+                      className="w-full text-xs font-extrabold border-gray-200/75 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 rounded-xl h-10 shadow-sm cursor-pointer"
                     >
                       <Edit2 className="h-3.5 w-3.5 text-gray-500" /> Edit
                     </Button>
@@ -283,7 +284,7 @@ export default function Units() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenDelete(unit)}
-                      className="w-full text-xs font-semibold border-red-200 text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center justify-center gap-1.5 rounded-lg"
+                      className="w-full text-xs font-extrabold border-red-200/50 text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center justify-center gap-1.5 rounded-xl h-10 shadow-sm cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5 text-red-500" /> Delete
                     </Button>
